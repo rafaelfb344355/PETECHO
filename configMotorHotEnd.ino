@@ -68,8 +68,8 @@ int lastButtonStateLeft = HIGH;
 
 int lastButtonStateRight = HIGH; 
 
-const char* ssid = "Rafael";
-const char* password = "rafaelfb344355";
+const char* ssid = "Nome_Wifi";
+const char* password = "Senha";
 
 ESP8266WebServer server(80);
 
