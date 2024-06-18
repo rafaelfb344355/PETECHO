@@ -37,41 +37,25 @@ As seguintes bibliotecas são utilizadas neste projeto:
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/seu_usuario/seu_repositorio.git
-Abra o projeto no Arduino IDE.
-Instale as bibliotecas necessárias via Library Manager ou usando o gerenciador de bibliotecas do Arduino IDE.
-Configure seu SSID e senha de Wi-Fi no código:
-cpp
-Copiar código
-const char* ssid = "Rafael";
-const char* password = "rafaelfb344355";
-Compile e envie o código para o seu ESP8266.
-Uso
-Controle via Botões
-Botão Up (D1): Navega para cima no menu ou aumenta o valor selecionado.
-Botão Down (D2): Navega para baixo no menu ou diminui o valor selecionado.
-Botão Left (D3): Seleciona a opção ou alterna o estado do motor/aquecedor.
-Botão Right (D4): Exibe o endereço IP ou retorna ao menu principal.
-Interface Web
-Conecte-se à rede Wi-Fi configurada.
-Acesse a interface web através do endereço IP do ESP8266.
-Utilize os controles na interface para monitorar e controlar o motor e o aquecedor.
-Rotas da API
-GET /: Página principal.
-GET /state: Obtém o estado atual do sistema.
-POST /state: Atualiza o estado do sistema.
-GET /data: Obtém dados de temperatura e velocidade.
-GET /pagina2: Página de monitoramento.
-Licença
-Este projeto está licenciado sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+   git clone https://github.com/rafaelfb344355/PETECO.git
+* Abra o projeto no Arduino IDE.
+* Instale as bibliotecas necessárias via Library Manager ou usando o gerenciador de bibliotecas do Arduino IDE.
+2. Configure seu SSID e senha de Wi-Fi no código:
 
-Contato
-Para mais informações, entre em contato:
+* const char* ssid = "Nome_Wifi";
+* const char* password = "Senha";
+* Compile e envie o código para o seu ESP8266.
 
-Nome: Seu Nome
-Email: seu.email@exemplo.com
-markdown
-Copiar código
+## Uso
+1. Controle via Botões
+- Botão Up (D1): Navega para cima no menu ou aumenta o valor selecionado.
+- Botão Down (D2): Navega para baixo no menu ou diminui o valor selecionado.
+- Botão Left (D3): Seleciona a opção ou alterna o estado do motor/aquecedor.
+- Botão Right (D4): Exibe o endereço IP ou retorna ao menu principal.
+2. Interface Web
+- Conecte-se à rede Wi-Fi configurada.
+- Acesse a interface web através do endereço IP do ESP8266.
+- Utilize os controles na interface para monitorar e controlar o motor e o aquecedor.
 
 ### Explicação
 
@@ -80,7 +64,5 @@ Copiar código
 3. **Dependências**: Bibliotecas necessárias para o projeto, com links para suas páginas.
 4. **Instalação**: Instruções detalhadas para clonar o repositório, abrir o projeto, instalar dependências e configurar a rede Wi-Fi.
 5. **Uso**: Explicação sobre como usar os botões e a interface web para controlar o sistema.
-6. **Licença**: Informação sobre a licença do projeto.
-7. **Contato**: Informações de contato para suporte ou perguntas adicionais.
 
-Sinta-se à vontade para modificar e adaptar o README conforme necessário para se adequar melhor ao seu projeto.
+
