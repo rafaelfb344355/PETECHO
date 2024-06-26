@@ -57,7 +57,7 @@ As seguintes bibliotecas são utilizadas neste projeto:
 - Acesse a interface web através do endereço IP do ESP8266.
 - Utilize os controles na interface para monitorar e controlar o motor e o aquecedor.
 
-### Explicação
+## Explicação
 
 1. **Descrição**: Uma visão geral do projeto.
 2. **Componentes Utilizados**: Lista dos componentes de hardware usados no projeto.
