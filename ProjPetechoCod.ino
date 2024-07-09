@@ -50,6 +50,7 @@
 #define THERMISTOR_PIN A0   // Pino analógico do Arduino conectado ao termistor
 #define LED_PIN D2
 const int pinoBotao = D3;
+int IR_PIN = D1;
 #define LED_COUNT 8
 #define BRIGHTNESS 90
 
@@ -58,19 +59,19 @@ const int pinoBotao = D3;
 #define MOTOR_ACELERACAO 100
 #define MOTOR_INTERVALO 5
 
-
+#define CMD_POWER 0xFFE21D
 #define CMD_AUMENTATEMPERATURA 0xFF02FD
 #define CMD_DIMINUETEMPERATURA 0xFF9867
 #define CMD_AUMENTAVELOCIDADE 0xFF906F
 #define CMD_DIMINUEVELOCIDADE 0xFFE01F
 
-#define CMD_REPETICAO 0xFFFFFFFF
+#define CMD_REPETICAO 0xFFFFFFFFFFFFFFFF
 
 float TEMP_MINIMA = 0.0;
 float TEMP_MAXIMA = 300.0;
 float INTERVALO_TEMP = 5.0;
 
-int IR_PIN = D1;  // Pino IN para leitura do controle remoto
+  // Pino IN para leitura do controle remoto
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 IRrecv irrecv(IR_PIN);
@@ -80,7 +81,7 @@ SSD1306Wire display(0x3c, D5, D6);
 
 float temperature = 0.0;
 int motorSpeed = 0;
-int heaterTemp = 100;
+int heaterTemp = 200;
 bool power = false;
 
 unsigned long agora = 0;
@@ -135,10 +136,13 @@ void setup() {
 }
 
 void loop() {
+
   temperaturaLeitura();
+
   if (irrecv.decode(&results)) {
     Serial.print("Received IR code: ");
     Serial.println(results.value, HEX);
+           
     mudarEstadoComando();
     irrecv.resume();
   }
@@ -155,7 +159,7 @@ void loop() {
   // paradaAltomatica();
 
   ledsAcendeEstado();
-
+ 
   atuadorTemperatura();
 
   atuadorMotor();
@@ -243,21 +247,22 @@ void mudarEstadoComando() {
         motorSpeed = MOTOR_VELOCIDADEMIM;
       break;
 
-    case 0xFFA25D:
-      if (power == false) {
-        power = true;
-      } else {
-        power = false;
-      }
-    default:
-      break;
+    case CMD_POWER:
+       power=!power;
+       break;
   }
+
+  
 }
 
 // =============================================================================================
 void atuadorTemperatura() {
   // Implementação necessária
-  if (power == true) {
+  
+
+  //o erro acontece aqui...
+  if(power==true){
+
     temperature = thermistor->readCelsius();
     if (temperature < heaterTemp) {
       digitalWrite(MOSFET_GATE_PIN, HIGH);
@@ -272,25 +277,24 @@ void atuadorTemperatura() {
 void atuadorMotor() {
   // Implementação necessária
 
-  if (power == true) {
+ 
     myStepper.setSpeed(motorSpeed);
 
     myStepper.runSpeed();  // Controla a velocidade do motor continuamente
-  }
+  
 }
 
 // =============================================================================================
 bool temperaturaLeitura() {
   // Aqui você deve colocar o código para ler a temperatura do termistor.
-  // Este é um exemplo básico, você pode ajustá-lo conforme a necessidade do seu projeto.
 
   temperature = thermistor->readCelsius();
 
-
   // Exemplo de lógica simples para determinar se a leitura foi bem-sucedida
-  if (temperature > -40 && temperature < 125) {  // Faixa típica de um termistor NTC
-    return true;
-  } else {
-    return false;
-  }
+    if (temperature > -40 && temperature < 125) {  // Faixa típica de um termistor NTC
+     return true;
+    }   else {
+      return false;
+   }
+  
 }
