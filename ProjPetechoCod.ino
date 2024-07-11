@@ -59,7 +59,7 @@ int IR_PIN = D1;
 #define MOTOR_ACELERACAO 100
 #define MOTOR_INTERVALO 5
 
-#define CMD_POWER 0xFFE21D
+#define CMD_POWER 0xFFA25D
 #define CMD_AUMENTATEMPERATURA 0xFF02FD
 #define CMD_DIMINUETEMPERATURA 0xFF9867
 #define CMD_AUMENTAVELOCIDADE 0xFF906F
@@ -70,8 +70,6 @@ int IR_PIN = D1;
 float TEMP_MINIMA = 0.0;
 float TEMP_MAXIMA = 300.0;
 float INTERVALO_TEMP = 5.0;
-
-  // Pino IN para leitura do controle remoto
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 IRrecv irrecv(IR_PIN);
@@ -85,35 +83,15 @@ int heaterTemp = 200;
 bool power = false;
 
 unsigned long agora = 0;
-const unsigned long IntervaloDisplay = 1000;  // 3 segundos para atualização do display
+const unsigned long IntervaloDisplay = 1000;  // 1 segundo para atualização do display
 unsigned long ultimoDisplayUpdate = 0;
-// Variáveis para armazenar o estado anterior dos botões
-
-unsigned long ultimoTempo = 0;
-const unsigned long intervalo = 500;
-
-bool botaoPressionadoAnterior = false;
-
-int brightness = BRIGHTNESS;
-
-
+unsigned long ultimoTempoLeitura = 0;
+const unsigned long intervaloLeituraTemp = 2000;  // 2 segundos para atualização da temperatura
 
 AccelStepper myStepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
-
 NTC_Thermistor* thermistor = new NTC_Thermistor(THERMISTOR_PIN, 10000, 100000, 25, 3950);
 
-
-
-bool temperaturaLeitura();
-bool remotoLeitura();
-void displayMostraEstado();
-void ledsAcendeEstado();
-void mudarEstadoComando();
-void atuadorTemperatura();
-void atuadorMotor();
-
 void setup() {
-  // Inicializar variáveis
   Serial.begin(115200);
 
   display.init();
@@ -121,23 +99,22 @@ void setup() {
   display.setFont(ArialMT_Plain_16);
 
   strip.begin();
-  strip.setBrightness(brightness);
+  strip.setBrightness(BRIGHTNESS);
   strip.show();
 
-  myStepper.setMaxSpeed(MOTOR_VELOCIDADEMAXIMA);  // Velocidade máxima do motor
-  myStepper.setAcceleration(MOTOR_ACELERACAO);    // Aceleração do motor
+  myStepper.setMaxSpeed(MOTOR_VELOCIDADEMAXIMA);
+  myStepper.setAcceleration(MOTOR_ACELERACAO);
+
   pinMode(MOSFET_GATE_PIN, OUTPUT);
-  // pinMode(pinoBotao, INPUT);
   irrecv.enableIRIn();
 
-  // Chamar função para ligar LEDs e mostrar estado atual
   ledsAcendeEstado();
   displayMostraEstado();
 }
 
 void loop() {
 
-  temperaturaLeitura();
+   temperaturaLeitura();
 
   if (irrecv.decode(&results)) {
     Serial.print("Received IR code: ");
@@ -147,27 +124,22 @@ void loop() {
     irrecv.resume();
   }
 
+  agora = millis();
 
-  unsigned long agora = millis();
-
-  // Atualizações do display a cada 3 segundos
   if (agora - ultimoDisplayUpdate >= IntervaloDisplay) {
     displayMostraEstado();
     ultimoDisplayUpdate = agora;
   }
 
-  // paradaAltomatica();
-
-  ledsAcendeEstado();
- 
-  atuadorTemperatura();
+  if (agora - ultimoTempoLeitura >= intervaloLeituraTemp) {
+    atuadorTemperatura();
+    ultimoTempoLeitura = agora;
+  }
 
   atuadorMotor();
 }
 
-
 void ledsAcendeEstado() {
-
   for (int i = 0; i < LED_COUNT; i++) {
     strip.setPixelColor(i, strip.Color(161, 0, 255));  // Vermelho
   }
@@ -175,126 +147,67 @@ void ledsAcendeEstado() {
 }
 
 void displayMostraEstado() {
-
-
   display.clear();
   display.drawString(0, 0, "Petecho");
-  display.drawString(90, 0, (power ? "on" : " off"));
+  display.drawString(90, 0, (power ? "on" : "off"));
   display.drawString(0, 20, "Temp: ");
   display.drawString(45, 20, String(temperature, 0));
   display.drawString(75, 20, String(heaterTemp));
-
   display.drawString(0, 40, "Vel: ");
   display.drawString(30, 40, String(motorSpeed));
   display.display();
 }
 
-// void paradaAltomatica() {
-//   // Verifica se o intervalo de tempo definido passou
-//   if (millis() - ultimoTempo >= intervalo) {
-//     ultimoTempo = millis();  // Atualiza o último tempo
-
-//     // Lê o estado atual do botão
-//     bool botaoPressionado = digitalRead(pinoBotao);
-
-//     // Verifica se o botão foi pressionado e está agora sendo liberado
-//     if (!botaoPressionado && botaoPressionadoAnterior) {
-//       // Se a variável power está true, então muda para false
-//       if (power) {
-//         power = false;  // Inverte o estado da variável
-//         Serial.print("Botão liberado! Variável power = ");
-//         Serial.println(power);
-//       }
-//     }
-
-//     // Atualiza o estado anterior do botão para o próximo ciclo
-//     botaoPressionadoAnterior = botaoPressionado;
-//   }
-// }
-
-
-
-// =========================================================================================
 void mudarEstadoComando() {
-
-
   switch (results.value) {
-
     case CMD_REPETICAO:
       break;
-
     case CMD_AUMENTATEMPERATURA:
-
       heaterTemp += INTERVALO_TEMP;
-      if (heaterTemp >= TEMP_MAXIMA)
-        heaterTemp = TEMP_MAXIMA;
+      if (heaterTemp >= TEMP_MAXIMA) heaterTemp = TEMP_MAXIMA;
       break;
     case CMD_DIMINUETEMPERATURA:
-
       heaterTemp -= INTERVALO_TEMP;
-      if (heaterTemp <= TEMP_MINIMA)
-        heaterTemp = TEMP_MINIMA;
+      if (heaterTemp <= TEMP_MINIMA) heaterTemp = TEMP_MINIMA;
       break;
     case CMD_AUMENTAVELOCIDADE:
       motorSpeed += MOTOR_INTERVALO;
-      if (motorSpeed >= MOTOR_VELOCIDADEMAXIMA)
-        motorSpeed = MOTOR_VELOCIDADEMAXIMA;
+      if (motorSpeed >= MOTOR_VELOCIDADEMAXIMA) motorSpeed = MOTOR_VELOCIDADEMAXIMA;
       break;
     case CMD_DIMINUEVELOCIDADE:
-
       motorSpeed -= MOTOR_INTERVALO;
-      if (motorSpeed <= MOTOR_VELOCIDADEMIM)
-        motorSpeed = MOTOR_VELOCIDADEMIM;
+      if (motorSpeed <= MOTOR_VELOCIDADEMIM) motorSpeed = MOTOR_VELOCIDADEMIM;
       break;
-
     case CMD_POWER:
-       power=!power;
-       break;
+      power = !power;
+      break;
   }
-
-  
 }
 
-// =============================================================================================
 void atuadorTemperatura() {
-  // Implementação necessária
-  
-
-  //o erro acontece aqui...
-  if(power==true){
-
-    temperature = thermistor->readCelsius();
+  if (power) {
     if (temperature < heaterTemp) {
       digitalWrite(MOSFET_GATE_PIN, HIGH);
-
     } else {
       digitalWrite(MOSFET_GATE_PIN, LOW);
     }
+  } else {
+    digitalWrite(MOSFET_GATE_PIN, LOW);
   }
 }
 
-// =============================================================================================
 void atuadorMotor() {
-  // Implementação necessária
-
- 
-    myStepper.setSpeed(motorSpeed);
-
-    myStepper.runSpeed();  // Controla a velocidade do motor continuamente
-  
+ if (power) {
+  myStepper.setSpeed(motorSpeed);
+  myStepper.runSpeed();  
+ }
 }
 
-// =============================================================================================
 bool temperaturaLeitura() {
-  // Aqui você deve colocar o código para ler a temperatura do termistor.
-
   temperature = thermistor->readCelsius();
-
-  // Exemplo de lógica simples para determinar se a leitura foi bem-sucedida
-    if (temperature > -40 && temperature < 125) {  // Faixa típica de um termistor NTC
-     return true;
-    }   else {
-      return false;
-   }
-  
+  if (temperature > -40 && temperature < 125) {
+    return true;
+  } else {
+    return false;
+  }
 }
